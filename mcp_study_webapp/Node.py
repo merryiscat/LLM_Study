@@ -72,6 +72,7 @@ def summarize_node(state: OverallState) -> OverallState:
         ("human", '''
         다음 search_results는 사용자의 쿼리와 그에 대한 장소 추천 결과입니다.  
         결과를 정리된 Markdown 형태로 출력하세요.
+        이미지 url은 제거하세요
         user_input 의도에 맞는 장소 3개만 추천해주세요.
         알맞은 장소를 찾지 못하였다 답변해주세요.
 
