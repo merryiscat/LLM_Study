@@ -12,6 +12,9 @@ KAKAO_MAP_API_KEY="키값"
 
 # 랭그래프 추적을 위한 엔드포인트 및 키값
 LANGCHAIN_TRACING_V2=true
+
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+
 LANGCHAIN_API_KEY="키값"
+
 LANGCHAIN_PROJECT=MCP_Study
