@@ -8,6 +8,7 @@ OPENAI_API_KEY="키값"
 
 # 카카오맵 api tool은 스미더리에서 만들어진 Kakao Map Mcp 활용
 SMITHERY_API_KEY="키값"
+
 KAKAO_MAP_API_KEY="키값"
 
 # 랭그래프 추적을 위한 엔드포인트 및 키값
