@@ -19,12 +19,6 @@ def user_input_node(state: InputState):
         "messages": [("user", user_input)],
     }
 
-    return {
-        **state,
-        "user_input": user_input,
-        "messages": [("user", user_input)],
-    }
-
 def user_query_node(state: OverallState) -> OverallState:
     user_input = state["user_input"]
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
@@ -94,28 +88,22 @@ def summarize_node(state: OverallState) -> OverallState:
 
 def result_check_node(state: OverallState):
     results = state.get("search_results", {}).get("results", [])
-    print(f"[DEBUG] Number of results: {len(results)}")
-
+    
     for i, r in enumerate(results):
         if isinstance(r, TextContent):
             text = r.text.strip()
-            print(f"[DEBUG #{i}] text[:100]: {repr(text[:100])}")
-
+            
             try:
                 parsed = json.loads(text)
-                print(f"[DEBUG #{i}] Parsed JSON type: {type(parsed)}")
-
+                
                 if isinstance(parsed, list) and parsed:
                     first_item = parsed[0]
-                    print(f"[DEBUG #{i}] Keys in first item: {list(first_item.keys())}")
-
+                    
                     if isinstance(first_item, dict) and "place_name" in first_item:
-                        print(f"[DEBUG #{i}] Found place_name, returning Ok_result")
                         return "Ok_result"
             except Exception as e:
                 print(f"[DEBUG #{i}] JSON parsing failed: {e}")
 
-    print("[DEBUG] No valid result found, returning No_search")
     return "No_search"
 
 def re_query_node(state: OverallState):
