@@ -10,14 +10,14 @@ class InputState(TypedDict):
 class ReActState(TypedDict):
     user_input: str
     messages: Annotated[list, add_messages]
-    search_queries: str  # Action에서 추출된 퀴리
+    raw_final_json: str  # Action에서 추출된 퀴리
     search_results: dict
     final_summary: str
 
 class OverallState(TypedDict):
     user_input: str
     messages: Annotated[list, add_messages]
-    search_queries: str
+    raw_final_json: str
     search_results: dict
     final_summary: str
     re_queries: str
