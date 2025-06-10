@@ -3,6 +3,7 @@ import json
 import asyncio
 import nest_asyncio
 import asyncio
+import re
 from mcp.types import TextContent
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import MemorySaver
@@ -21,42 +22,79 @@ def user_input_node(state: InputState):
 
 def react_reasoning_node(state: ReActState) -> ReActState:
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=1.0)
+
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "당신은 검색 전문가 입니다. {user_input}의 의도를 분석하고  Thought, Action 형식으로 응답하세요."),
+        ("system", """
+당신은 숙련된 식당 추천 추론 전문가 입니다.
+
+다음을 따라 사용자 조건에 맞는 식당 후보를 3~5개 도출하세요.
+1. {user_input}을 해석하고, user 지역과 user 상황에 맞는 음식 3개~5개를 도출하세요.
+2. user 지역 + 음식 에 해당하는 식당을 tool을 사용하여 검색하시오.
+3. 사고 과정을 사용하여 행동 입력을 공식화합니다.
+4. 원하는 결과를 얻지 못하면, 작업 입력을 수정하고 정보를 계속 검색하세요.
+5. 최종 답변은 반드시 한국어로 작성해야 합니다.
+6. 존재하지 않는 식당을 만들어서 추천하지 마시오
+7. json 형태로 'final answer'를 출력하시오.
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {user_input}
+Thought:{agent_scratchpad}
+"""),
         ("human", '사용자 입력: "{user_input}"')
     ])
-    messages = prompt.format_messages(user_input=state["user_input"])
-    response = llm.invoke(messages)
 
-    # Action: search_place("...") 구문 파싱
-    lines = response.content.splitlines()
-    action_line = next((l for l in lines if l.startswith("Action:")), None)
-    query = (
-        action_line.removeprefix("Action: search_place(")
-        .removesuffix(")").strip().strip('"')
-        if action_line else ""
+    messages = prompt.format_messages(
+        user_input=state["user_input"],
+        agent_scratchpad=state.get("messages", ""),
+        tool_names="recommend_place"
     )
 
+    response = llm.invoke(messages)
+    full_response = response.content
+
+    # ✅ Final Answer JSON 파싱
+    final_json = {}
+    match = re.search(r"Final Answer:\s*(\{.*)", full_response, re.DOTALL)
+    if match:
+        json_str = match.group(1).strip()
+        try:
+            final_json = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print("[ERROR] JSON 파싱 실패:", e)
+
+    recommended_places = final_json.get("추천_식당", [])
+
+    # ✅ 상태 업데이트
     return {
         **state,
-        "messages": state["messages"] + [("assistant", response.content)],
-        "search_queries": query,
+        "messages": state.get("messages", []) + [("assistant", full_response)],
+        "추천_식당": recommended_places,
+        "raw_final_json": final_json  # (선택) 전체 JSON도 저장 가능
     }
 
-
 def user_query_node(state: OverallState) -> OverallState:
-    user_input = state["user_input"]
+    keyward_queries = state["raw_final_json"]
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", "당신은 장소 검색 쿼리 생성 전문가입니다."),
         ("human", '''
-사용자 입력: "{user_input}"을 분석하여 찾고 싶은 위치를 분석하여 검색 쿼리를 만들어주세요.
+사용자 입력: "{keyward_queries}"을 분석하여 위치를 검색해서 찾아주세요.
 형식: 반드시 따옴표 없는 **단일 자연어 문장**만 출력하세요.
 ''')
     ])
 
-    messages = prompt.format_messages(user_input=user_input)
+    messages = prompt.format_messages(user_input=keyward_queries)
     response = llm.invoke(messages)
 
     # content는 str로 바로 저장
