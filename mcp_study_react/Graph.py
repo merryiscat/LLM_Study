@@ -6,38 +6,17 @@ from Node import *
 
 def Project_Graph():
     memory = MemorySaver()
-    graph = graph_builder.compile(checkpointer=memory)
-    return graph
+    builder = StateGraph(OverallState)
 
-# 1. 그래프 인스턴스 생성
-memory = MemorySaver()
-graph_builder = StateGraph(OverallState, ReActState, input=InputState, output=EndState)
+    builder.add_node("user_input_node", user_input_node)
+    builder.add_node("intent_extract", intent_extract_node)
 
-# 노드 등록
-graph_builder.add_node("input_node", user_input_node)
-graph_builder.add_node("react_reasoning", react_reasoning_node)
-graph_builder.add_node("query_generation", user_query_node)
-graph_builder.add_node("search", search_node)
-graph_builder.add_node("summarize", summarize_node)
-graph_builder.add_node("re_query", re_query_node)
+    builder.set_entry_point("user_input_node")
+    builder.add_edge("user_input_node", "intent_extract")
+    builder.set_finish_point("intent_extract")
 
-# 흐름 연결
-graph_builder.add_edge(START, "input_node")
-graph_builder.add_edge("input_node", "react_reasoning")
-graph_builder.add_edge("react_reasoning", "query_generation")
-graph_builder.add_edge("query_generation", "search")
-graph_builder.add_conditional_edges(
-    "search", 
-    result_check_node, 
-    {"Ok_result": "summarize", "No_search": "re_query"}
-)
-graph_builder.add_edge("re_query", "search")
-graph_builder.add_edge("summarize", END)
+    app = builder.compile(checkpointer=memory)  # ✔️ 여기서만 컴파일
+    return app
 
-# 그래프 컴파일
-graph = graph_builder.compile()
-
-##### edges.py에서 Graph Export #####
-def Project_Graph():
-    graph = graph_builder.compile(checkpointer=memory)
-    return graph
+# 앱 인스턴스 만들기
+graph_app = Project_Graph()
