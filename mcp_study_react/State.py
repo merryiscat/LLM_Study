@@ -7,20 +7,19 @@ from langgraph.graph.message import add_messages
 class InputState(TypedDict):
     start_input: str
 
-class ReActState(TypedDict):
-    user_input: str
-    messages: Annotated[list, add_messages]
-    raw_final_json: str  # Action에서 추출된 퀴리
-    search_results: dict
-    final_summary: str
-
 class OverallState(TypedDict):
     user_input: str
+    location: str
+    conditions: list[str]
+    condition_weights: Dict[str, int]
+    condition_food_map: Dict[str, List[str]]
+    food_scores: Dict[str, int]
+    top_foods: List[str]
+    query_list: List[str]	
+    search_results: List[Dict]
+    summarized_places: List[Dict]
+    final_recommendations: List[Dict]
     messages: Annotated[list, add_messages]
-    raw_final_json: str
-    search_results: dict
-    final_summary: str
-    re_queries: str
-    
+     
 class EndState(TypedDict):
-    final_summary: str
+   final_recommendations: List[Dict]
