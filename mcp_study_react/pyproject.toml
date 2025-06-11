@@ -1,0 +1,22 @@
+[project]
+name = "mcp_study_react"
+version = "0.1.0"
+description = "MCP 기반 LangGraph 앱"
+authors = [{ name = "minhy", email = "you@example.com" }]
+dependencies = [
+    "langchain>=0.1.16",
+    "langgraph>=0.0.40",
+    "langchain-openai>=0.1.6",
+    "openai>=1.25.0",
+    "python-dotenv",
+    "nest_asyncio",
+    "tiktoken"
+]
+requires-python = ">=3.9"
+
+[tool.setuptools]
+py-modules = ["app", "Graph", "Mcp_Tool", "Node", "State"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
