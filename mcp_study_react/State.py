@@ -5,7 +5,7 @@ from langgraph.graph.message import add_messages
 
 ######## states 정의 ########
 class InputState(TypedDict):
-    start_input: str
+    user_input: str
 
 class OverallState(TypedDict):
     user_input: str
