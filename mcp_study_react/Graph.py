@@ -5,7 +5,6 @@ from State import *
 from Node import *
 
 def Project_Graph():
-    memory = MemorySaver()
     builder = StateGraph(OverallState)
 
     builder.add_node("user_input_node", user_input_node)
@@ -15,8 +14,8 @@ def Project_Graph():
     builder.add_edge("user_input_node", "intent_extract")
     builder.set_finish_point("intent_extract")
 
-    app = builder.compile(checkpointer=memory)  # ✔️ 여기서만 컴파일
-    return app
+    # ✅ 체크포인터 설정
+    memory = MemorySaver()
+    app = builder.compile(checkpointer=None)
 
-# 앱 인스턴스 만들기
-graph_app = Project_Graph()
+    return app  # ✅ 반드시 반환

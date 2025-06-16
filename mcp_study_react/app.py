@@ -9,16 +9,11 @@ from dotenv import load_dotenv
 # API KEY 정보로드
 load_dotenv()
 
-test_input = {
-    "start_input": "비오는 날 수진역 혼자 저녁 먹을 식당 추천해줘"
-}
-
 graph_app = Project_Graph()
 
-result = graph_app.invoke(
-    test_input,
-    config={"thread_id": "run-001"}  # ✅ thread_id 명시
-)
+result = graph_app.invoke({
+    "user_input": "비 오는 날 수진역 근처 저녁으로 부모님과 함께 먹을만한 술집 추천해줘",
+    "thread_id": "run-0001" 
+})
 
-print("✅ 결과:", result)
-print("입력 디버깅:", test_input)
+print("결과:", result)
