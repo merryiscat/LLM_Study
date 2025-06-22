@@ -9,13 +9,20 @@ def Project_Graph():
 
     builder.add_node("user_input_node", user_input_node)
     builder.add_node("intent_extract", intent_extract_node)
+    builder.add_node("keywords_rank", keywords_rank_node)
+    builder.add_node("query_make", query_make_node)
+    builder.add_node("run_mcp", run_mcp_node)
+    builder.add_node("result_make", result_make_node)
 
     builder.set_entry_point("user_input_node")
     builder.add_edge("user_input_node", "intent_extract")
-    builder.set_finish_point("intent_extract")
+    builder.add_edge("intent_extract", "keywords_rank")
+    builder.add_edge("keywords_rank", "query_make")
+    builder.add_edge("query_make", "run_mcp")
+    builder.add_edge("run_mcp", "result_make")    
+    builder.set_finish_point("result_make")
 
-    # ✅ 체크포인터 설정
     memory = MemorySaver()
     app = builder.compile(checkpointer=None)
 
-    return app  # ✅ 반드시 반환
+    return app 
