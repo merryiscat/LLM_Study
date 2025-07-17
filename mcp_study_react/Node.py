@@ -23,13 +23,36 @@ def user_input_node(state: InputState) -> OverallState:
         "messages": [("user", user_input)],
     }
 
-# ──────────────────────── 1. LLM 체인 정의 ────────────────────────
+# ──────────────────────── 1. LLM 체인 정의 ────────────────────────\
+class IntentclassifyOutput(TypedDict):
+    intent: str
+
+    prompt = ChatPromptTemplate.from_template("""
+다음 사용자 문장에서 사용자의 의도를 다음 중 하나로 분류하시오.
+
+1. 음식추천요청 (ex. 오늘 저녁 뭐 먹을까?, 뭐 먹지?, 점심 메뉴 골라줘 등)
+2. 식당검색요청 (ex. 수진역 근처 술집 추천해줘, 근처 맛집 찾아줘 등)
+3. 일상대화(ex. 안녕하세요, 너무 좋아요, 잘 지내세요 등)
+4. 그외기타                         
+
+답변 표출 형식은 아래와 같이 의도만 표출하여 주세요.
+'''
+{"intent": "음식추천요청"}
+'''
+[사용자 입력]
+{user_input}
+""")
+
+parser = JsonOutputParser(pydantic_object=IntentclassifyOutput)
+llm = ChatOpenAI(model="gpt-4o-mini")
+intent_classify_chain = prompt | llm | parser
+
 class IntentExtractOutput(TypedDict):
     location: str
     conditions: list[str]
     condition_food_map: Dict[str, List[str]]
 
-prompt = ChatPromptTemplate.from_template("""
+    prompt = ChatPromptTemplate.from_template("""
 다음 사용자 문장에서 아래 항목들을 추출하세요:
 
 1. 사용자가 찾는 장소 값. 단 사용자 입력에 지역이 없는 경우 서울을 기본값으로 사용하시오.
@@ -67,6 +90,15 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 intent_extract_chain = prompt | llm | parser
 
 # ──────────────────────── 2. LangGraph 노드 정의 ────────────────────────
+def intent_classify_node(state: OverallState) -> OverallState:
+    user_input = state["user_input"]
+    result = intent_classify_chain({"user_input": user_input})
+    
+    return {
+        **state,
+        "intent": result["location"]
+    },
+
 def intent_extract_node(state: OverallState) -> OverallState:
     user_input = state["user_input"]
     result = intent_extract_chain.invoke({"user_input": user_input})
@@ -135,7 +167,7 @@ def query_make_node(state: OverallState) -> OverallState:
 
 def run_mcp_node(state: OverallState) -> OverallState:
     query_list = state["query_list"]
-    url = "http://localhost:5678/webhook/d3ffd0df-5e7b-4bfe-bb30-cf2ac7afd43e"
+    url = "http://localhost:5678/webhook/76b4d5d4-57a9-46af-ae0c-66fa0fcc3e46"
 
     try:
         response = requests.post(

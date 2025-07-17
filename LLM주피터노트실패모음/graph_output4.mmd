@@ -1,0 +1,32 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	User_Input(User Input)
+	Search_Query_Generation(Search Query Generation)
+	Init_Loop(Init Loop)
+	Process_Query(Process Query)
+	Update_State(Update State)
+	Web_Search(Web Search)
+	Web_Query_Refine(Web Query Refine)
+	Web_Search_Retry(Web Search Retry)
+	Calculation(Calculation)
+	End(End)
+	__end__(<p>__end__</p>)
+	Calculation --> End;
+	End --> __end__;
+	Process_Query --> Update_State;
+	Search_Query_Generation --> Init_Loop;
+	Update_State --> Web_Search;
+	User_Input --> Search_Query_Generation;
+	Web_Query_Refine --> Web_Search_Retry;
+	Web_Search --> Web_Query_Refine;
+	__start__ --> User_Input;
+	Init_Loop -. &nbsp;continue&nbsp; .-> Process_Query;
+	Init_Loop -. &nbsp;done&nbsp; .-> Calculation;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
