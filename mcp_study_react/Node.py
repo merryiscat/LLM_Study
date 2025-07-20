@@ -27,7 +27,7 @@ def user_input_node(state: InputState) -> OverallState:
 class IntentclassifyOutput(TypedDict):
     intent: str
 
-    prompt = ChatPromptTemplate.from_template("""
+intent_classify_prompt = ChatPromptTemplate.from_template("""
 다음 사용자 문장에서 사용자의 의도를 다음 중 하나로 분류하시오.
 
 1. 음식추천요청 (ex. 오늘 저녁 뭐 먹을까?, 뭐 먹지?, 점심 메뉴 골라줘 등)
@@ -36,23 +36,22 @@ class IntentclassifyOutput(TypedDict):
 4. 그외기타                         
 
 답변 표출 형식은 아래와 같이 의도만 표출하여 주세요.
-'''
-{"intent": "음식추천요청"}
-'''
+{{"intent": "음식추천요청"}}
+
 [사용자 입력]
 {user_input}
 """)
 
-parser = JsonOutputParser(pydantic_object=IntentclassifyOutput)
+intent_classify_parser = JsonOutputParser(pydantic_object=IntentclassifyOutput)
 llm = ChatOpenAI(model="gpt-4o-mini")
-intent_classify_chain = prompt | llm | parser
+intent_classify_chain = intent_classify_prompt | llm | intent_classify_parser
 
 class IntentExtractOutput(TypedDict):
     location: str
     conditions: list[str]
     condition_food_map: Dict[str, List[str]]
 
-    prompt = ChatPromptTemplate.from_template("""
+intent_extract_prompt = ChatPromptTemplate.from_template("""
 다음 사용자 문장에서 아래 항목들을 추출하세요:
 
 1. 사용자가 찾는 장소 값. 단 사용자 입력에 지역이 없는 경우 서울을 기본값으로 사용하시오.
@@ -87,17 +86,17 @@ class IntentExtractOutput(TypedDict):
 
 parser = JsonOutputParser(pydantic_object=IntentExtractOutput)
 llm = ChatOpenAI(model="gpt-4o-mini")
-intent_extract_chain = prompt | llm | parser
+intent_extract_chain = intent_extract_prompt | llm | parser
 
 # ──────────────────────── 2. LangGraph 노드 정의 ────────────────────────
 def intent_classify_node(state: OverallState) -> OverallState:
     user_input = state["user_input"]
-    result = intent_classify_chain({"user_input": user_input})
+    result = intent_classify_chain.invoke({"user_input": user_input})
     
     return {
         **state,
-        "intent": result["location"]
-    },
+        "intent": result["intent"]
+    }
 
 def intent_extract_node(state: OverallState) -> OverallState:
     user_input = state["user_input"]
@@ -108,6 +107,14 @@ def intent_extract_node(state: OverallState) -> OverallState:
         "location": result["location"],
         "conditions": result["conditions"],
         "condition_food_map": result["condition_food_map"]
+    }
+
+def test_node(state: OverallState) -> OverallState:
+    user_input = state["user_input"]
+    
+    return {
+        **state,
+        "intent": "test"
     }
 
 def keywords_rank_node(state: OverallState) -> OverallState:
