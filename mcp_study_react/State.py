@@ -9,6 +9,7 @@ class InputState(TypedDict):
 
 class OverallState(TypedDict):
     user_input: str
+    intent: str
     location: str
     conditions: list[str]
     condition_weights: Dict[str, int]
