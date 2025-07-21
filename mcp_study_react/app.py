@@ -12,7 +12,7 @@ load_dotenv()
 graph_app = Project_Graph()
 
 result = graph_app.invoke({
-    "user_input": "비 오는 날 수진역 근처 저녁으로 부모님과 함께 먹을만한 술집 추천해줘",
+    "user_input": "아 피곤하다",
     "thread_id": "run-0001" 
 })
 
