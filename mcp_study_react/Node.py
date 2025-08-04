@@ -202,6 +202,8 @@ def result_make_node(state: OverallState) -> OverallState:
 사용자의 요청과 아래 음식점 리스트를 참고하여 **Top 3 장소**를 추천해주세요.  
 반드시 사용자의 상황과 요청 의도를 반영해서 선택해주세요.
 
+답변은 마크다운 형식으로 예쁘게 정리해주세요.
+
 ---
 
 [사용자 요청]
@@ -220,5 +222,5 @@ def result_make_node(state: OverallState) -> OverallState:
     
     return {
         **state,
-        "final_recommendations": result
-    }
+        "final_recommendations": result.content
+}

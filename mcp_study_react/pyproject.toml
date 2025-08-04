@@ -10,8 +10,12 @@ dependencies = [
     "openai>=1.25.0",
     "python-dotenv",
     "nest_asyncio",
+    "streamlit",
+    "streamlit-chat",
+    "openai",
     "tiktoken"
 ]
+
 requires-python = ">=3.9"
 
 [tool.setuptools]

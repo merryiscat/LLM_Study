@@ -23,4 +23,4 @@ class OverallState(TypedDict):
     messages: Annotated[list, add_messages]
      
 class EndState(TypedDict):
-   final_recommendations: List[Dict]
+   final_recommendations: str
