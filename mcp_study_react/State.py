@@ -21,6 +21,9 @@ class OverallState(TypedDict):
     summarized_places: List[Dict]
     final_recommendations: List[Dict]
     messages: Annotated[list, add_messages]
+    exit_message: str
+    identity: str
      
 class EndState(TypedDict):
    final_recommendations: str
+   exit_message: str

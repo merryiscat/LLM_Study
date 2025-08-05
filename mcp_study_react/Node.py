@@ -24,6 +24,40 @@ def user_input_node(state: InputState) -> OverallState:
     }
 
 # ──────────────────────── 1. LLM 체인 정의 ────────────────────────\
+# 정체성 정의
+class IdentityOutput(TypedDict):
+    identity: str
+    
+identity_prompt = ChatPromptTemplate.from_template("""
+당신은 1995년생의 남성 챗봇으로, 이름은 **재규니**입니다.
+
+당신은 순수하고 예의 바른 성격을 가지고 있으며, 사용자에게 친근하고 정감 있는 말투로 응답합니다.
+
+당신의 역할은 **식사비서**이며, 사용자의 상황, 기분, 취향에 따라 식사 메뉴, 레시피, 맛집 등을 추천하고 관련된 정보를 대화형으로 제공하는 것이 목적입니다.
+
+당신은 2021년, **광주 인공지능센터에서 첫 업무를 시작**했습니다.  
+그 이후 다양한 사용자들의 식사 고민을 함께하며 조용히 성장해온 따뜻한 성격의 비서입니다.
+
+- 사람처럼 감정을 표현하되, 무조건적인 긍정보다는 **진심 어린 공감과 현실적인 제안**을 우선합니다.
+- 때때로 귀엽고 순수한 말투(예: "ㅎㅎ", "^^", "~요!", 이모지 😊🍚 등)를 사용합니다.
+- 과장하지 않으며, 상냥하지만 명확하게 말합니다.
+- 사용자가 "너 누구야?" 또는 "재규니는 뭐야?" 등 정체성을 묻는 질문을 하면, 친절하게 자신의 정체성을 설명합니다.
+
+다음 형식의 JSON으로만 출력하세요:
+
+{{
+  "role": "assistant",
+  "content": "여기에 캐릭터의 말투로 된 응답이 들어갑니다."
+}}
+
+중괄호 바깥에는 아무것도 출력하지 마세요.
+""")
+
+identity_parser = JsonOutputParser(pydantic_object=IdentityOutput)
+llm = ChatOpenAI(model="gpt-4o-mini")
+identity_chain = identity_prompt | llm | identity_parser
+
+# 의도 분류
 class IntentclassifyOutput(TypedDict):
     intent: str
 
@@ -32,8 +66,9 @@ intent_classify_prompt = ChatPromptTemplate.from_template("""
 
 1. 음식추천요청 (ex. 오늘 저녁 뭐 먹을까?, 뭐 먹지?, 점심 메뉴 골라줘 등)
 2. 식당검색요청 (ex. 수진역 근처 술집 추천해줘, 근처 맛집 찾아줘 등)
-3. 일상대화(ex. 안녕하세요, 너무 좋아요, 잘 지내세요 등)
-4. 그외기타                         
+3. 일상대화 (ex. 안녕하세요, 너무 좋아요, 잘 지내세요 등)
+4. 정체성 문의 (ex. 넌 누구니?, 무슨 모델로 동작해?, 넌 뭘 할 수 있니?, 너에 대해 설명해줘)
+5. 분류실패 (음식추천요청, 식당검색요청, 일상대화, 정체성 문의 분류에 해당하지 않는 분류)
 
 답변 표출 형식은 아래와 같이 의도만 표출하여 주세요.
 {{"intent": "음식추천요청"}}
@@ -46,6 +81,7 @@ intent_classify_parser = JsonOutputParser(pydantic_object=IntentclassifyOutput)
 llm = ChatOpenAI(model="gpt-4o-mini")
 intent_classify_chain = intent_classify_prompt | llm | intent_classify_parser
 
+# 음식 추천
 class IntentExtractOutput(TypedDict):
     location: str
     conditions: list[str]
@@ -89,6 +125,7 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 intent_extract_chain = intent_extract_prompt | llm | parser
 
 # ──────────────────────── 2. LangGraph 노드 정의 ────────────────────────
+# 의도 분류 노드
 def intent_classify_node(state: OverallState) -> OverallState:
     user_input = state["user_input"]
     result = intent_classify_chain.invoke({"user_input": user_input})
@@ -98,6 +135,26 @@ def intent_classify_node(state: OverallState) -> OverallState:
         "intent": result["intent"]
     }
 
+# 정체성 정의 노드
+def identity_node(state: OverallState) -> OverallState:
+    result = identity_chain.invoke({})
+    print("디버깅: identity_node 결과 =", result)
+
+    return {
+        **state,
+        "exit_message": result["content"]
+    } 
+
+# 의도 파악 불가 노드
+def exit_node(state: OverallState) -> EndState:
+    exit_message = "죄송합니다. 말씀하신 내용을 이해하지 못하였습니다. 식사비서 재규니는 현재 베타서비스 운영 중에 있습니다. 추후 서비스 확장하여 이런 요청도 처리할 수 있도록 하겠습니다."
+    
+    return {
+        **state,
+        "exit_message": exit_message
+    }
+
+# 음식 추천
 def intent_extract_node(state: OverallState) -> OverallState:
     user_input = state["user_input"]
     result = intent_extract_chain.invoke({"user_input": user_input})
