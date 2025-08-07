@@ -33,6 +33,12 @@ with st.sidebar:
     st.button("New Chat")
 
 # =============================
+# 💾 세션 상태 초기화
+# =============================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# =============================
 # ✨ 유틸 함수 정의
 # =============================
 
@@ -62,25 +68,49 @@ def render_response(result: dict):
             st.json(result)
 
 # =============================
+# 💬 기존 대화 출력
+# =============================
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# =============================
 # 🤖 챗봇 처리
 # =============================
 
 user_input = st.chat_input("오늘 뭐 먹을까?")
 
 if user_input:
-    render_user_input(user_input)
+    # 유저 메시지 출력 및 저장
+    with st.chat_message("user"):
+        st.markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
     with st.chat_message("assistant"):
-        with st.spinner("맛집 찾는 중..."):
+        with st.spinner("채팅작성중.."):
             try:
                 result = graph_app.invoke({
                     "user_input": user_input,
                     "thread_id": "run-ui-001"
                 })
 
-                # 결과 출력 처리
                 if isinstance(result, dict):
-                    render_response(result)
+                    # 응답 메시지 추출
+                    if "final_recommendations" in result:
+                        response = result["final_recommendations"]
+                    elif "exit_message" in result:
+                        response = result["exit_message"] + "\n\n다른 방식으로 다시 말씀해 주세요 🙂"
+                    else:
+                        response = "❌ 추천 결과를 불러오는 데 실패했습니다."
+
+                    # 응답 출력 및 저장
+                    if isinstance(response, str):
+                        st.markdown(response.replace("\n", "  \n"))
+                        st.session_state.messages.append({"role": "assistant", "content": response})
+                    else:
+                        st.write(response)
+                        st.session_state.messages.append({"role": "assistant", "content": str(response)})
+
                 else:
                     st.error("❌ 시스템 오류: 올바른 결과를 반환하지 못했습니다.")
 
