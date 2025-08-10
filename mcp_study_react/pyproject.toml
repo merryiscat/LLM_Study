@@ -12,11 +12,11 @@ dependencies = [
     "nest_asyncio",
     "streamlit",
     "streamlit-chat",
-    "openai",
-    "tiktoken"
+    "tiktoken",
+    "mcp"
 ]
 
-requires-python = ">=3.9"
+requires-python = ">=3.10"  
 
 [tool.setuptools]
 py-modules = ["app", "Graph", "Mcp_Tool", "Node", "State"]
