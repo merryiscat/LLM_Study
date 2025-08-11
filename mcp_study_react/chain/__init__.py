@@ -6,4 +6,5 @@ __all__ = [
     "identity_chain",
     "intent_classify_chain",
     "intent_extract_chain",
+    "talk_chain",
 ]
