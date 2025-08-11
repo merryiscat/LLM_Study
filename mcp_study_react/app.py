@@ -99,7 +99,7 @@ if user_input:
                     if "final_recommendations" in result:
                         response = result["final_recommendations"]
                     elif "exit_message" in result:
-                        response = result["exit_message"] + "\n\n다른 방식으로 다시 말씀해 주세요 🙂"
+                        response = result["exit_message"]
                     else:
                         response = "❌ 추천 결과를 불러오는 데 실패했습니다."
 

@@ -3,8 +3,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
 from typing import TypedDict, Literal
 
-# 정체성 정의
-class IdentityOutput(TypedDict):
+# 파서정의
+class TalkOutput(TypedDict):
     role: Literal["assistant"]
     content: str
 
@@ -14,9 +14,9 @@ def load_prompt_from_file(path: str) -> str:
         return f.read()
     
 # 프롬프트 파일 경로
-prompt_text = load_prompt_from_file("chain/prompt/identity_prompt.txt")
-identity_prompt = ChatPromptTemplate.from_template(prompt_text)
+prompt_text = load_prompt_from_file("chain/prompt/talk_prompt.txt")
+talk_prompt = ChatPromptTemplate.from_template(prompt_text)
 
-identity_parser = JsonOutputParser(pydantic_object=IdentityOutput)
+talk_parser = JsonOutputParser(pydantic_object=TalkOutput)
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=1.0)
-identity_chain = identity_prompt | llm | identity_parser
+talk_chain = talk_prompt | llm | talk_parser

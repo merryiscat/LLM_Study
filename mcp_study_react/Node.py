@@ -5,7 +5,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_openai import ChatOpenAI
 from State import *
 from Mcp_Tool import *
-from chain import identity_chain, intent_classify_chain, intent_extract_chain
+from chain import identity_chain, intent_classify_chain, intent_extract_chain, talk_chain
 from logger.observability import log_node_outputs
 
 # 사용자 입력 노드 정의
@@ -54,7 +54,20 @@ def exit_node(state: OverallState) -> EndState:
         "exit_message": exit_message
     }
 
-# 음식 추천(의도 세부 추출)
+# 일상 대화 노드
+@log_node_outputs("talk_node",
+                  include_keys=["exit_message","run_id"])
+def talk_node(state: OverallState) -> EndState:
+    user_input = state["user_input"]
+
+    result = talk_chain.invoke({"user_input": user_input})
+    print("디버깅: talk_node 결과 =", result)
+    return {
+        **state,
+        "exit_message": result["content"]
+    }
+
+# 의도 추출 노드
 @log_node_outputs("intent_extract_node",
                   include_keys=["location","conditions","condition_food_map","run_id"],
                   max_items=3)  # condition_food_map 미리보기 제한
