@@ -37,7 +37,8 @@ def intent_classify_node(state: OverallState) -> OverallState:
 @log_node_outputs("identity_node",
                   include_keys=["exit_message","run_id"], max_str=400)
 def identity_node(state: OverallState) -> OverallState:
-    result = identity_chain.invoke({})
+    user_input = state["user_input"]
+    result = identity_chain.invoke({"user_input": user_input})
     print("디버깅: identity_node 결과 =", result)
     return {
         **state,
