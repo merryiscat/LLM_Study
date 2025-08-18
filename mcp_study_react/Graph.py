@@ -18,6 +18,7 @@ def Project_Graph():
     builder.add_node("query_make", query_make_node)
     builder.add_node("identity_node", identity_node)
     builder.add_node("talk_node", talk_node)
+    builder.add_node("food_recommand_node", food_recommand_node)
     builder.add_node("run_mcp", run_mcp_node)
     builder.add_node("result_make", result_make_node)
     builder.add_node("exit_node", exit_node)
@@ -27,7 +28,7 @@ def Project_Graph():
     builder.add_conditional_edges(
     "intent_classify",
     simple_route,
-    {"음식추천요청": "test_node", "식당검색요청": "intent_extract", "일상대화": "talk_node", "정체성 문의": "identity_node", "분류실패":"exit_node"}
+    {"음식추천요청": "food_recommand_node", "식당검색요청": "intent_extract", "일상대화": "talk_node", "정체성 문의": "identity_node", "분류실패":"exit_node"}
     )
     builder.add_edge("intent_extract", "keywords_rank")
     builder.add_edge("keywords_rank", "query_make")

@@ -5,7 +5,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_openai import ChatOpenAI
 from State import *
 from Mcp_Tool import *
-from chain import identity_chain, intent_classify_chain, intent_extract_chain, talk_chain
+from chain import identity_chain, intent_classify_chain, intent_extract_chain, talk_chain, food_recommand_chain
 from logger.observability import log_node_outputs
 
 # 사용자 입력 노드 정의
@@ -33,10 +33,22 @@ def intent_classify_node(state: OverallState) -> OverallState:
         "intent": result["intent"]
     }
 
+# 음식 추천 노드
+@log_node_outputs("food_recommand_node",
+                  include_keys=["exit_message","run_id"], max_str=400)
+def food_recommand_node(state: OverallState) -> EndState:
+    user_input = state["user_input"]
+    result = food_recommand_chain.invoke({"user_input": user_input})
+    print("디버깅: food_recommandnode 결과 =", result)
+    return {
+        **state,
+        "exit_message": result["content"]
+    }
+
 # 정체성 정의 노드
 @log_node_outputs("identity_node",
                   include_keys=["exit_message","run_id"], max_str=400)
-def identity_node(state: OverallState) -> OverallState:
+def identity_node(state: OverallState) -> EndState:
     user_input = state["user_input"]
     result = identity_chain.invoke({"user_input": user_input})
     print("디버깅: identity_node 결과 =", result)
